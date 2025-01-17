@@ -1,4 +1,5 @@
 import os
+import shutil
 
 def rename_files_in_directory(directory):
     # Check if the directory exists
@@ -8,7 +9,8 @@ def rename_files_in_directory(directory):
 
     # Counter for new file names
     counter = 1
-
+    # Store original file names
+    original_names = {}
     # Specified prefix for the new file names
     prefix = "image"
 
@@ -23,6 +25,9 @@ def rename_files_in_directory(directory):
             ext = os.path.splitext(filename)[1]
             # Form the new file name
             newname = f"{prefix}{counter}{ext}"
+
+            # Store the original name for potential rollback
+            original_names[counter] = filename
 
             # Check if the new file name already exists
             if os.path.exists(os.path.join(directory, newname)):
@@ -42,6 +47,28 @@ def rename_files_in_directory(directory):
                 break
 
     print("Renaming completed from image1 to image50.")
+
+    # Ask the user for confirmation to keep the new names
+    confirm = input("Are you okay with the updated file names? (Y/N): ").strip().upper()
+    
+    if confirm == 'Y':
+        print("The new file names have been kept.")
+    else:
+        # Rename back to original names
+        print("Reverting to original file names...")
+        for i in range(1, counter):
+            original_name = original_names[i]
+            newname = f"{prefix}{i}{os.path.splitext(original_name)[1]}"
+            os.rename(os.path.join(directory, newname), os.path.join(directory, original_name))
+            print(f"Renamed '{newname}' back to '{original_name}'")
+        print("Reverted to original file names.")
+
+    # Ask if the user wants to continue processing the next 50 images
+    continue_processing = input("Would you like to continue processing the next 50 images? (Y/N): ").strip().upper()
+    if continue_processing == 'Y':
+        rename_files_in_directory(directory)  # Recursively call the function for next batch
+    else:
+        print("Exiting the application.")
 
 if __name__ == "__main__":
     # Ask the user for the directory
